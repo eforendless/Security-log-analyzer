@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { AlertsPage } from '../../features/alerts/AlertsPage';
 import { DashboardPage } from '../../features/dashboard/DashboardPage';
+import { SettingsPage } from '../../features/settings/SettingsPage';
 import { UploadPage } from '../../features/uploads/UploadPage';
 import { PageTitle } from '../ui/PageTitle';
 import { navigationItems, type NavigationItemId } from './navigation';
@@ -48,6 +49,8 @@ export function AppShell(): React.JSX.Element {
             <UploadPage />
           ) : activeItemId === 'alerts' ? (
             <AlertsPage />
+          ) : activeItemId === 'settings' ? (
+            <SettingsPage />
           ) : (
             <PageTitle title={activeItem.label} />
           )}

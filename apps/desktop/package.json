@@ -1,6 +1,6 @@
 {
   "name": "@security-log-analyzer/desktop",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Offline Windows security log analysis workstation",
   "author": "Security Log Analyzer",
   "private": true,

@@ -6,7 +6,7 @@ import { asyncRoute } from '../../middleware/async-route.js';
 const healthResponse = {
   status: 'ok',
   service: 'AI Security Log Analyzer API',
-  version: '1.0.1',
+  version: '1.0.2',
 } as const;
 
 export function createHealthRouter(environment: Environment): Router {

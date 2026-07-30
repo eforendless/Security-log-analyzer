@@ -10,6 +10,7 @@ import {
 import { createAlertsRouter } from './modules/alerts/alerts-router.js';
 import { createDashboardRouter } from './modules/dashboard/dashboard-router.js';
 import { createHealthRouter } from './modules/health/health-router.js';
+import { createSettingsRouter } from './modules/settings/settings-router.js';
 import { createUploadsRouter } from './modules/uploads/uploads-router.js';
 
 export function createApp(environment: Environment): Express {
@@ -28,6 +29,7 @@ export function createApp(environment: Environment): Express {
   );
   app.use(express.json({ limit: '32kb' }));
   app.use('/api/v1/health', createHealthRouter(environment));
+  app.use('/api/v1/settings', createSettingsRouter(environment));
   app.use('/api/v1/alerts', createAlertsRouter(environment));
   app.use('/api/v1/dashboard', createDashboardRouter(environment));
   app.use('/api/v1/uploads', createUploadsRouter(environment));

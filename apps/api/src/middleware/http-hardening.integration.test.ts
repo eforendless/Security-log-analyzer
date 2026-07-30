@@ -56,6 +56,24 @@ describe('HTTP hardening', () => {
     expect(response.headers['access-control-allow-origin']).toBe('http://127.0.0.1:4000');
   });
 
+  it('reports safe local AI settings without returning the provider key', async () => {
+    const app = await createTestApp(120, 'sk-test-private-key');
+
+    const response = await request(app).get('/api/v1/settings').expect(200);
+
+    expect(response.body).toEqual({
+      settings: {
+        aiAnalysis: {
+          configured: true,
+          model: 'gpt-4.1-mini',
+          timeoutMs: 15_000,
+        },
+        maximumUploadBytes: 5 * 1024 * 1024,
+      },
+    });
+    expect(JSON.stringify(response.body)).not.toContain('sk-test-private-key');
+  });
+
   it('rate limits application routes while allowing repeated health probes', async () => {
     const app = await createTestApp(1);
 
@@ -67,7 +85,10 @@ describe('HTTP hardening', () => {
   });
 });
 
-async function createTestApp(rateLimitMaximumRequests = 120) {
+async function createTestApp(
+  rateLimitMaximumRequests = 120,
+  openAiApiKey: string | undefined = undefined,
+) {
   const uploadStorageDirectory = await mkdtemp(join(tmpdir(), 'security-log-analyzer-hardening-'));
   storageRoots.push(uploadStorageDirectory);
 
@@ -75,7 +96,7 @@ async function createTestApp(rateLimitMaximumRequests = 120) {
     corsAllowedOrigins: ['https://console.example.test'],
     host: '127.0.0.1',
     maximumUploadBytes: 5 * 1024 * 1024,
-    openAiApiKey: undefined,
+    openAiApiKey,
     openAiModel: 'gpt-4.1-mini',
     openAiTimeoutMs: 15_000,
     port: 0,

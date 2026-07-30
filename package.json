@@ -1,6 +1,6 @@
 {
   "name": "ai-security-log-analyzer",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "private": true,
   "description": "AI-assisted Windows security log analysis platform",
   "workspaces": [
