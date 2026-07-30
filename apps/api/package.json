@@ -1,0 +1,27 @@
+{
+  "name": "@security-log-analyzer/api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.js",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@security-log-analyzer/application": "file:../../packages/application",
+    "@security-log-analyzer/contracts": "file:../../packages/contracts",
+    "@security-log-analyzer/infrastructure": "file:../../packages/infrastructure",
+    "dotenv": "^16.6.1",
+    "express": "^5.1.0",
+    "multer": "^2.0.2"
+  },
+  "devDependencies": {
+    "@types/multer": "^2.0.0",
+    "@types/supertest": "^6.0.2",
+    "supertest": "^7.1.1",
+    "vitest": "^3.2.4"
+  }
+}

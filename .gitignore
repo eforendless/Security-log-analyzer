@@ -1,0 +1,9 @@
+node_modules/
+dist/
+coverage/
+apps/api/data/
+.env
+.env.local
+*.log
+!tests/fixtures/*.log
+.DS_Store
