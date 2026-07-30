@@ -7,7 +7,7 @@ const parser = new SupportedTextLogParser();
 
 describe('SupportedTextLogParser', () => {
   it('normalizes line exports and retains physical source record references', async () => {
-    const parsed = parser.parse({
+    const parsed = await parser.parse({
       content: await readFixture('sanitized-security-export.log'),
       mediaType: 'text/plain',
       originalFileName: 'sanitized-security-export.log',
@@ -38,7 +38,7 @@ describe('SupportedTextLogParser', () => {
     ['sanitized-security-export.json', 'application/json'],
     ['sanitized-security-export.xml', 'application/xml'],
   ])('normalizes the %s structured export', async (fixtureName, mediaType) => {
-    const parsed = parser.parse({
+    const parsed = await parser.parse({
       content: await readFixture(fixtureName),
       mediaType,
       originalFileName: fixtureName,
@@ -50,14 +50,14 @@ describe('SupportedTextLogParser', () => {
     expect(parsed.summary.skippedRecordCount).toBe(0);
   });
 
-  it('rejects invalid JSON exports', () => {
-    expect(() =>
+  it('rejects invalid JSON exports', async () => {
+    await expect(
       parser.parse({
         content: new TextEncoder().encode('{invalid'),
         mediaType: 'application/json',
         originalFileName: 'invalid.json',
       }),
-    ).toThrow(TextLogParseError);
+    ).rejects.toThrow(TextLogParseError);
   });
 });
 

@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@security-log-analyzer/domain": "file:../domain",
+    "@ts-evtx/core": "^1.2.0",
     "csv-parse": "^5.6.0",
     "fast-xml-parser": "^5.2.5"
   }

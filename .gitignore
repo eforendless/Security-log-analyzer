@@ -1,6 +1,7 @@
 node_modules/
 dist/
 coverage/
+release/
 apps/api/data/
 .env
 .env.local

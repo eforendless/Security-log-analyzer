@@ -1,4 +1,4 @@
-import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type {
   LogParseSummary,
@@ -24,6 +24,17 @@ export class LocalUploadRepository implements UploadRepository {
     }
   }
 
+  public async list(): Promise<readonly LogUpload[]> {
+    const metadataFileNames = await this.findMetadataFileNames();
+
+    return Promise.all(
+      metadataFileNames.map(async (fileName) => {
+        const content = await readFile(join(this.metadataDirectory, fileName), 'utf8');
+        return deserializeUpload(JSON.parse(content) as unknown);
+      }),
+    );
+  }
+
   public async save(upload: LogUpload): Promise<void> {
     await mkdir(this.metadataDirectory, { recursive: true });
 
@@ -44,6 +55,26 @@ export class LocalUploadRepository implements UploadRepository {
 
   private metadataPath(uploadId: string): string {
     return join(this.metadataDirectory, `${uploadId}.json`);
+  }
+
+  private async findMetadataFileNames(): Promise<readonly string[]> {
+    try {
+      const metadataEntries = await readdir(this.metadataDirectory, {
+        encoding: 'utf8',
+        withFileTypes: true,
+      });
+
+      return metadataEntries
+        .filter((entry) => entry.isFile() && entry.name.endsWith('.json'))
+        .map((entry) => entry.name)
+        .sort(compareStrings);
+    } catch (error: unknown) {
+      if (isErrorWithCode(error, 'ENOENT')) {
+        return [];
+      }
+
+      throw error;
+    }
   }
 }
 
@@ -226,4 +257,16 @@ function isErrorWithCode(error: unknown, code: string): error is NodeJS.ErrnoExc
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
+}
+
+function compareStrings(left: string, right: string): number {
+  if (left < right) {
+    return -1;
+  }
+
+  if (left > right) {
+    return 1;
+  }
+
+  return 0;
 }

@@ -51,11 +51,24 @@ describe('upload routes', () => {
       .post('/api/v1/uploads')
       .attach('file', Buffer.from('binary content'), {
         contentType: 'application/octet-stream',
-        filename: 'security.evtx',
+        filename: 'security.exe',
       })
       .expect(400);
 
     expect(apiErrorResponseSchema.parse(response.body).error.code).toBe('INVALID_UPLOAD');
+  });
+
+  it('accepts the EVTX media type before returning a typed invalid-content response', async () => {
+    const app = await createTestApp();
+    const response = await request(app)
+      .post('/api/v1/uploads')
+      .attach('file', Buffer.from('not an EVTX file'), {
+        contentType: 'application/octet-stream',
+        filename: 'security.evtx',
+      })
+      .expect(422);
+
+    expect(apiErrorResponseSchema.parse(response.body).error.code).toBe('INVALID_LOG_CONTENT');
   });
 
   it('accepts browser-provided generic MIME types for allowlisted text exports', async () => {

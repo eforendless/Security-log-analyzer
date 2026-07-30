@@ -1,6 +1,6 @@
 import type {
   LogUpload,
-  TextLogParser,
+  LogParser,
   UploadFileStorage,
   UploadRepository,
 } from '@security-log-analyzer/domain';
@@ -17,7 +17,7 @@ interface CreateUploadDependencies {
   readonly fileStorage: UploadFileStorage;
   readonly maximumUploadBytes: number;
   readonly now: () => Date;
-  readonly parser: TextLogParser;
+  readonly parser: LogParser;
   readonly uploadRepository: UploadRepository;
 }
 
@@ -34,7 +34,7 @@ export class CreateUpload {
       uploadId: id,
     });
     try {
-      const parsing = this.dependencies.parser.parse({
+      const parsing = await this.dependencies.parser.parse({
         content: input.content,
         mediaType: input.mediaType,
         originalFileName: input.originalFileName,

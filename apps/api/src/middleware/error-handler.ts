@@ -1,5 +1,14 @@
-import { UploadNotFoundError, UploadValidationError } from '@security-log-analyzer/application';
-import { TextLogParseError } from '@security-log-analyzer/domain';
+import {
+  AlertNotFoundError,
+  AlertValidationError,
+  UploadNotFoundError,
+  UploadValidationError,
+} from '@security-log-analyzer/application';
+import {
+  SecurityAnalysisProviderError,
+  SecurityAnalysisUnavailableError,
+  TextLogParseError,
+} from '@security-log-analyzer/domain';
 import type { ErrorRequestHandler } from 'express';
 import { MulterError } from 'multer';
 
@@ -16,6 +25,33 @@ function errorResponse(code: string, message: string): ErrorResponse {
 
 export const errorHandler: ErrorRequestHandler = (error: unknown, _request, response, _next) => {
   void _next;
+
+  if (error instanceof SyntaxError) {
+    response
+      .status(400)
+      .json(errorResponse('INVALID_REQUEST', 'The request body must contain valid JSON.'));
+    return;
+  }
+
+  if (error instanceof AlertValidationError) {
+    response.status(400).json(errorResponse('INVALID_ALERT_REQUEST', error.message));
+    return;
+  }
+
+  if (error instanceof AlertNotFoundError) {
+    response.status(404).json(errorResponse('ALERT_NOT_FOUND', error.message));
+    return;
+  }
+
+  if (error instanceof SecurityAnalysisUnavailableError) {
+    response.status(503).json(errorResponse('AI_ANALYSIS_UNAVAILABLE', error.message));
+    return;
+  }
+
+  if (error instanceof SecurityAnalysisProviderError) {
+    response.status(502).json(errorResponse('AI_ANALYSIS_FAILED', error.message));
+    return;
+  }
 
   if (error instanceof UploadValidationError) {
     response.status(400).json(errorResponse('INVALID_UPLOAD', error.message));

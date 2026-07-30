@@ -15,14 +15,17 @@
     "build": "npm run build:packages && npm run build:apps",
     "build:apps": "npm run build --workspace @security-log-analyzer/api && npm run build --workspace @security-log-analyzer/web",
     "build:packages": "npm run build --workspace @security-log-analyzer/domain && npm run build --workspace @security-log-analyzer/contracts && npm run build --workspace @security-log-analyzer/application && npm run build --workspace @security-log-analyzer/infrastructure",
+    "desktop:build": "npm run build && npm run build --workspace @security-log-analyzer/desktop",
+    "desktop:package": "npm run desktop:build && npm run package --workspace @security-log-analyzer/desktop",
+    "desktop:dev": "npm run desktop:build && npm run dev --workspace @security-log-analyzer/desktop",
     "dev": "npm run build:packages && concurrently -k -n api,web -c cyan,green \"npm run dev --workspace @security-log-analyzer/api\" \"npm run dev --workspace @security-log-analyzer/web\"",
     "dev:api": "npm run dev --workspace @security-log-analyzer/api",
     "dev:web": "npm run dev --workspace @security-log-analyzer/web",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint . --max-warnings=0",
-    "test": "npm run build:packages && npm run test --workspace @security-log-analyzer/infrastructure && npm run test --workspace @security-log-analyzer/api",
-    "typecheck": "npm run build:packages && npm run typecheck --workspaces --if-present"
+    "test": "npm run build:packages && npm run test --workspace @security-log-analyzer/application && npm run test --workspace @security-log-analyzer/infrastructure && npm run test --workspace @security-log-analyzer/api",
+    "typecheck": "npm run build:packages && npm run build --workspace @security-log-analyzer/api && npm run typecheck --workspaces --if-present"
   },
   "devDependencies": {
     "@eslint/js": "^9.35.0",

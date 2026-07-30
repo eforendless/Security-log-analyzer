@@ -1,0 +1,57 @@
+{
+  "name": "@security-log-analyzer/desktop",
+  "version": "1.0.0",
+  "description": "Offline Windows security log analysis workstation",
+  "author": "Security Log Analyzer",
+  "private": true,
+  "main": "dist/main.cjs",
+  "scripts": {
+    "build": "npm run typecheck && esbuild src/main.ts --bundle --platform=node --format=cjs --external:electron --outfile=dist/main.cjs",
+    "dev": "electron .",
+    "package": "electron-builder --win nsis",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@security-log-analyzer/api": "file:../api",
+    "electron": "37.2.6",
+    "electron-builder": "^26.0.12",
+    "esbuild": "^0.25.9"
+  },
+  "build": {
+    "appId": "com.securityloganalyzer.desktop",
+    "productName": "Security Log Analyzer",
+    "directories": {
+      "output": "../../release"
+    },
+    "files": [
+      "dist/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "../web/dist",
+        "to": "web",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "asar": true,
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "oneClick": false,
+      "perMachine": false
+    }
+  }
+}

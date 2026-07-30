@@ -1,6 +1,7 @@
 import { useState } from 'react';
+import { AlertsPage } from '../../features/alerts/AlertsPage';
+import { DashboardPage } from '../../features/dashboard/DashboardPage';
 import { UploadPage } from '../../features/uploads/UploadPage';
-import { DashboardEmptyState } from '../ui/DashboardEmptyState';
 import { PageTitle } from '../ui/PageTitle';
 import { navigationItems, type NavigationItemId } from './navigation';
 import { Sidebar } from './Sidebar';
@@ -42,9 +43,11 @@ export function AppShell(): React.JSX.Element {
         />
         <div className="px-5 py-7 sm:px-7 lg:px-9 lg:py-9">
           {activeItemId === 'dashboard' ? (
-            <DashboardEmptyState />
+            <DashboardPage />
           ) : activeItemId === 'uploads' ? (
             <UploadPage />
+          ) : activeItemId === 'alerts' ? (
+            <AlertsPage />
           ) : (
             <PageTitle title={activeItem.label} />
           )}

@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test
+      - run: npm run build
+      - run: npm audit --omit=dev --audit-level=high
+
+  containers:
+    needs: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - run: docker build --file infra/docker/api.Dockerfile --tag security-log-analyzer-api:ci .
+      - run: docker build --file infra/docker/web.Dockerfile --tag security-log-analyzer-web:ci .
+
+  windows-desktop:
+    needs: quality
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run desktop:package
+      - uses: actions/upload-artifact@v4
+        with:
+          name: security-log-analyzer-windows-installer
+          path: release/Security Log Analyzer Setup *.exe
+          if-no-files-found: error

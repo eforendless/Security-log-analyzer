@@ -31,8 +31,10 @@ export function buildParsedLog(
 }
 
 function normalizeEvent(record: SourceRecord, sourceRecord: number): SecurityEvent | undefined {
-  const occurredAt = parseOccurredAt(readValue(record, ['timestamp', 'occurredAt', 'timeCreated']));
-  const provider = readString(record, ['provider', 'providerName']);
+  const occurredAt = parseOccurredAt(
+    readValue(record, ['timestamp', 'occurredAt', 'timeCreated', 'systemTime']),
+  );
+  const provider = readString(record, ['provider', 'providerName', 'source']);
   const eventId = parseEventId(readValue(record, ['eventId', 'id']));
 
   if (occurredAt === undefined || provider === undefined || eventId === undefined) {
@@ -41,14 +43,40 @@ function normalizeEvent(record: SourceRecord, sourceRecord: number): SecurityEve
 
   return {
     eventId,
-    host: readString(record, ['host', 'computer']),
-    level: readString(record, ['level'])?.toLowerCase() ?? 'information',
-    message: readString(record, ['message', 'renderedMessage']) ?? '',
+    host: readString(record, ['host', 'computer', 'machineName', 'workstationName']),
+    level: normalizeWindowsLevel(readString(record, ['level', 'levelName'])),
+    message: readString(record, ['message', 'renderedMessage', 'description']) ?? '',
     occurredAt,
     provider,
     sourceRecord,
-    user: readString(record, ['user', 'userName', 'targetUserName']),
+    user: readString(record, [
+      'user',
+      'userName',
+      'targetUserName',
+      'subjectUserName',
+      'accountName',
+      'samAccountName',
+    ]),
   };
+}
+
+function normalizeWindowsLevel(value: string | undefined): string {
+  const normalized = value?.trim().toLowerCase();
+
+  switch (normalized) {
+    case '1':
+      return 'critical';
+    case '2':
+      return 'error';
+    case '3':
+      return 'warning';
+    case '4':
+      return 'information';
+    case '5':
+      return 'verbose';
+    default:
+      return normalized ?? 'information';
+  }
 }
 
 function summarize(events: readonly SecurityEvent[], skippedRecordCount: number): LogParseSummary {

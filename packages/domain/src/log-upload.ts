@@ -53,9 +53,15 @@ export interface UploadFileStorage {
   }): Promise<StoredUploadFile>;
 }
 
-export interface TextLogParser {
-  parse(input: { content: Uint8Array; mediaType: string; originalFileName: string }): ParsedLog;
+export interface LogParser {
+  parse(input: {
+    content: Uint8Array;
+    mediaType: string;
+    originalFileName: string;
+  }): Promise<ParsedLog>;
 }
+
+export type TextLogParser = LogParser;
 
 export class TextLogParseError extends Error {
   public constructor(message: string) {
@@ -66,5 +72,6 @@ export class TextLogParseError extends Error {
 
 export interface UploadRepository {
   findById(uploadId: string): Promise<LogUpload | undefined>;
+  list(): Promise<readonly LogUpload[]>;
   save(upload: LogUpload): Promise<void>;
 }

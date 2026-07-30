@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 export const acceptedTextFileExtensions = ['.txt', '.log', '.csv', '.json', '.xml'] as const;
+export const acceptedLogFileExtensions = [...acceptedTextFileExtensions, '.evtx'] as const;
 export const acceptedTextMimeTypes = [
   'text/plain',
   'text/csv',
@@ -12,6 +13,7 @@ export const acceptedTextMimeTypes = [
 ] as const;
 
 const acceptedExtensions = new Set<string>(acceptedTextFileExtensions);
+const acceptedLogExtensions = new Set<string>(acceptedLogFileExtensions);
 const acceptedMimeTypes = new Set<string>(acceptedTextMimeTypes);
 
 export const uploadStatusSchema = z.enum(['uploaded', 'parsed']);
@@ -52,4 +54,24 @@ export function isSupportedTextLogFile(fileName: string, mediaType: string): boo
   const extension = extensionStart === -1 ? '' : fileName.slice(extensionStart).toLowerCase();
 
   return acceptedExtensions.has(extension) && acceptedMimeTypes.has(mediaType.toLowerCase());
+}
+
+export function isSupportedLogFile(fileName: string, mediaType: string): boolean {
+  const extensionStart = fileName.lastIndexOf('.');
+  const extension = extensionStart === -1 ? '' : fileName.slice(extensionStart).toLowerCase();
+  const normalizedMediaType = mediaType.toLowerCase();
+
+  if (!acceptedLogExtensions.has(extension)) {
+    return false;
+  }
+
+  if (extension !== '.evtx') {
+    return acceptedMimeTypes.has(normalizedMediaType);
+  }
+
+  return (
+    normalizedMediaType === 'application/octet-stream' ||
+    normalizedMediaType === 'application/x-evtx' ||
+    normalizedMediaType === 'application/vnd.ms-eventlog'
+  );
 }

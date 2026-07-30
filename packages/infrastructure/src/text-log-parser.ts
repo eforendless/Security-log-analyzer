@@ -8,11 +8,11 @@ import {
 import { buildParsedLog, type SourceRecord } from './event-normalizer.js';
 
 export class SupportedTextLogParser implements TextLogParser {
-  public parse(input: {
+  public async parse(input: {
     content: Uint8Array;
     mediaType: string;
     originalFileName: string;
-  }): ParsedLog {
+  }): Promise<ParsedLog> {
     const text = decodeText(input.content);
     const extension = extensionOf(input.originalFileName);
 

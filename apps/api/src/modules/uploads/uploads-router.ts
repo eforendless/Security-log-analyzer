@@ -4,11 +4,11 @@ import {
   GetUploadStatus,
   UploadValidationError,
 } from '@security-log-analyzer/application';
-import { isSupportedTextLogFile, uploadResponseSchema } from '@security-log-analyzer/contracts';
+import { isSupportedLogFile, uploadResponseSchema } from '@security-log-analyzer/contracts';
 import {
   LocalUploadFileStorage,
   LocalUploadRepository,
-  SupportedTextLogParser,
+  SupportedSecurityLogParser,
 } from '@security-log-analyzer/infrastructure';
 import { Router } from 'express';
 import multer from 'multer';
@@ -22,7 +22,7 @@ export function createUploadsRouter(environment: Environment): Router {
   const router = Router();
   const fileStorage = new LocalUploadFileStorage(environment.uploadStorageDirectory);
   const uploadRepository = new LocalUploadRepository(environment.uploadStorageDirectory);
-  const parser = new SupportedTextLogParser();
+  const parser = new SupportedSecurityLogParser();
   const createUpload = new CreateUpload({
     createUploadId: randomUUID,
     fileStorage,
@@ -35,7 +35,10 @@ export function createUploadsRouter(environment: Environment): Router {
   const multipartUpload = multer({
     limits: {
       fileSize: environment.maximumUploadBytes,
+      fieldSize: 16 * 1024,
+      fields: 10,
       files: 1,
+      parts: 11,
     },
     storage: multer.memoryStorage(),
   });
@@ -50,8 +53,10 @@ export function createUploadsRouter(environment: Environment): Router {
         throw new UploadValidationError(`A '${uploadFieldName}' file is required.`);
       }
 
-      if (!isSupportedTextLogFile(file.originalname, file.mimetype)) {
-        throw new UploadValidationError('Only supported text log exports may be uploaded.');
+      if (!isSupportedLogFile(file.originalname, file.mimetype)) {
+        throw new UploadValidationError(
+          'Only supported text and EVTX log exports may be uploaded.',
+        );
       }
 
       const upload = await createUpload.execute({
