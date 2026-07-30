@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Events>
+  <Event>
+    <System>
+      <Provider Name="Security-Auditing" />
+      <EventID>4624</EventID>
+      <Level>4</Level>
+      <TimeCreated SystemTime="2026-07-30T12:00:00Z" />
+      <Computer>workstation-01</Computer>
+    </System>
+    <EventData>
+      <Data Name="TargetUserName">analyst</Data>
+    </EventData>
+    <RenderingInfo>
+      <Message>Successful logon</Message>
+    </RenderingInfo>
+  </Event>
+  <Event>
+    <System>
+      <Provider Name="Security-Auditing" />
+      <EventID>4625</EventID>
+      <Level>3</Level>
+      <TimeCreated SystemTime="2026-07-30T12:05:00Z" />
+      <Computer>workstation-01</Computer>
+    </System>
+    <EventData>
+      <Data Name="TargetUserName">analyst</Data>
+    </EventData>
+    <RenderingInfo>
+      <Message>Failed logon</Message>
+    </RenderingInfo>
+  </Event>
+</Events>

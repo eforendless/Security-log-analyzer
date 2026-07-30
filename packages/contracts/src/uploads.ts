@@ -14,7 +14,16 @@ export const acceptedTextMimeTypes = [
 const acceptedExtensions = new Set<string>(acceptedTextFileExtensions);
 const acceptedMimeTypes = new Set<string>(acceptedTextMimeTypes);
 
-export const uploadStatusSchema = z.literal('uploaded');
+export const uploadStatusSchema = z.enum(['uploaded', 'parsed']);
+
+export const logParseSummarySchema = z.object({
+  earliestOccurredAt: z.string().datetime().nullable(),
+  eventCount: z.number().int().nonnegative(),
+  eventsById: z.record(z.string(), z.number().int().nonnegative()),
+  eventsByProvider: z.record(z.string(), z.number().int().nonnegative()),
+  latestOccurredAt: z.string().datetime().nullable(),
+  skippedRecordCount: z.number().int().nonnegative(),
+});
 
 export const uploadResponseSchema = z.object({
   upload: z.object({
@@ -23,6 +32,7 @@ export const uploadResponseSchema = z.object({
     id: z.string().uuid(),
     mediaType: z.string().min(1),
     originalFileName: z.string().min(1),
+    parsingSummary: logParseSummarySchema.optional(),
     sha256: z.string().length(64),
     status: uploadStatusSchema,
   }),

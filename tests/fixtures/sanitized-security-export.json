@@ -1,0 +1,22 @@
+{
+  "events": [
+    {
+      "timestamp": "2026-07-30T12:00:00Z",
+      "level": "information",
+      "provider": "Security-Auditing",
+      "eventId": 4624,
+      "host": "workstation-01",
+      "userName": "analyst",
+      "message": "Successful logon"
+    },
+    {
+      "timestamp": "2026-07-30T12:05:00Z",
+      "level": "warning",
+      "provider": "Security-Auditing",
+      "eventId": 4625,
+      "host": "workstation-01",
+      "userName": "analyst",
+      "message": "Failed logon"
+    }
+  ]
+}

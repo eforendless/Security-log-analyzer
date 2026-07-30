@@ -1,6 +1,12 @@
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import type { LogUpload, UploadRepository, UploadStatus } from '@security-log-analyzer/domain';
+import type {
+  LogParseSummary,
+  LogUpload,
+  ParsedLog,
+  SecurityEvent,
+  UploadRepository,
+} from '@security-log-analyzer/domain';
 
 export class LocalUploadRepository implements UploadRepository {
   public constructor(private readonly storageRoot: string) {}
@@ -46,8 +52,17 @@ function deserializeUpload(value: unknown): LogUpload {
     throw new Error('Stored upload metadata is invalid.');
   }
 
-  const { byteSize, createdAt, id, mediaType, originalFileName, sha256, status, storedFileName } =
-    value;
+  const {
+    byteSize,
+    createdAt,
+    id,
+    mediaType,
+    originalFileName,
+    parsing,
+    sha256,
+    status,
+    storedFileName,
+  } = value;
 
   if (
     typeof byteSize !== 'number' ||
@@ -58,10 +73,16 @@ function deserializeUpload(value: unknown): LogUpload {
     typeof mediaType !== 'string' ||
     typeof originalFileName !== 'string' ||
     typeof sha256 !== 'string' ||
-    status !== 'uploaded' ||
+    (status !== 'uploaded' && status !== 'parsed') ||
     typeof storedFileName !== 'string'
   ) {
     throw new Error('Stored upload metadata is invalid.');
+  }
+
+  const parsedLog = parsing === undefined ? undefined : deserializeParsedLog(parsing);
+
+  if (status === 'parsed' && parsedLog === undefined) {
+    throw new Error('Stored parsed upload metadata is invalid.');
   }
 
   const parsedCreatedAt = new Date(createdAt);
@@ -76,10 +97,127 @@ function deserializeUpload(value: unknown): LogUpload {
     id,
     mediaType,
     originalFileName,
+    parsing: parsedLog,
     sha256,
-    status: status as UploadStatus,
+    status,
     storedFileName,
   };
+}
+
+function deserializeParsedLog(value: unknown): ParsedLog {
+  if (!isRecord(value) || !Array.isArray(value.events) || !isRecord(value.summary)) {
+    throw new Error('Stored parsing metadata is invalid.');
+  }
+
+  return {
+    events: value.events.map(deserializeSecurityEvent),
+    summary: deserializeSummary(value.summary),
+  };
+}
+
+function deserializeSecurityEvent(value: unknown): SecurityEvent {
+  if (!isRecord(value)) {
+    throw new Error('Stored security event metadata is invalid.');
+  }
+
+  const { eventId, host, level, message, occurredAt, provider, sourceRecord, user } = value;
+
+  if (
+    typeof eventId !== 'number' ||
+    !Number.isSafeInteger(eventId) ||
+    typeof level !== 'string' ||
+    typeof message !== 'string' ||
+    typeof occurredAt !== 'string' ||
+    typeof provider !== 'string' ||
+    typeof sourceRecord !== 'number' ||
+    !Number.isSafeInteger(sourceRecord) ||
+    !isOptionalString(host) ||
+    !isOptionalString(user)
+  ) {
+    throw new Error('Stored security event metadata is invalid.');
+  }
+
+  return {
+    eventId,
+    host,
+    level,
+    message,
+    occurredAt: deserializeDate(
+      occurredAt,
+      'Stored security event metadata contains an invalid timestamp.',
+    ),
+    provider,
+    sourceRecord,
+    user,
+  };
+}
+
+function deserializeSummary(value: Record<string, unknown>): LogParseSummary {
+  const {
+    earliestOccurredAt,
+    eventCount,
+    eventsById,
+    eventsByProvider,
+    latestOccurredAt,
+    skippedRecordCount,
+  } = value;
+
+  if (
+    typeof eventCount !== 'number' ||
+    !Number.isSafeInteger(eventCount) ||
+    eventCount < 0 ||
+    typeof skippedRecordCount !== 'number' ||
+    !Number.isSafeInteger(skippedRecordCount) ||
+    skippedRecordCount < 0 ||
+    !isCountRecord(eventsById) ||
+    !isCountRecord(eventsByProvider) ||
+    !isOptionalDateString(earliestOccurredAt) ||
+    !isOptionalDateString(latestOccurredAt)
+  ) {
+    throw new Error('Stored parsing summary metadata is invalid.');
+  }
+
+  return {
+    earliestOccurredAt:
+      earliestOccurredAt === undefined
+        ? undefined
+        : deserializeDate(earliestOccurredAt, 'Invalid earliest event timestamp.'),
+    eventCount,
+    eventsById,
+    eventsByProvider,
+    latestOccurredAt:
+      latestOccurredAt === undefined
+        ? undefined
+        : deserializeDate(latestOccurredAt, 'Invalid latest event timestamp.'),
+    skippedRecordCount,
+  };
+}
+
+function deserializeDate(value: string, errorMessage: string): Date {
+  const parsed = new Date(value);
+
+  if (Number.isNaN(parsed.getTime())) {
+    throw new Error(errorMessage);
+  }
+
+  return parsed;
+}
+
+function isCountRecord(value: unknown): value is Record<string, number> {
+  return (
+    isRecord(value) &&
+    Object.values(value).every(
+      (count) => typeof count === 'number' && Number.isSafeInteger(count) && count >= 0,
+    )
+  );
+}
+
+function isOptionalDateString(value: unknown): value is string | undefined {
+  return value === undefined || typeof value === 'string';
+}
+
+function isOptionalString(value: unknown): value is string | undefined {
+  return value === undefined || typeof value === 'string';
 }
 
 function isErrorWithCode(error: unknown, code: string): error is NodeJS.ErrnoException {

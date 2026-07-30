@@ -1,4 +1,9 @@
-import type { LogUpload, UploadFileStorage, UploadRepository } from '@security-log-analyzer/domain';
+import type {
+  LogUpload,
+  TextLogParser,
+  UploadFileStorage,
+  UploadRepository,
+} from '@security-log-analyzer/domain';
 import { UploadValidationError } from './upload-errors.js';
 
 export interface CreateUploadInput {
@@ -12,6 +17,7 @@ interface CreateUploadDependencies {
   readonly fileStorage: UploadFileStorage;
   readonly maximumUploadBytes: number;
   readonly now: () => Date;
+  readonly parser: TextLogParser;
   readonly uploadRepository: UploadRepository;
 }
 
@@ -27,18 +33,24 @@ export class CreateUpload {
       originalFileName: input.originalFileName,
       uploadId: id,
     });
-    const upload: LogUpload = {
-      byteSize: input.content.byteLength,
-      createdAt: this.dependencies.now(),
-      id,
-      mediaType: input.mediaType,
-      originalFileName: input.originalFileName,
-      sha256: storedFile.sha256,
-      status: 'uploaded',
-      storedFileName: storedFile.storedFileName,
-    };
-
     try {
+      const parsing = this.dependencies.parser.parse({
+        content: input.content,
+        mediaType: input.mediaType,
+        originalFileName: input.originalFileName,
+      });
+      const upload: LogUpload = {
+        byteSize: input.content.byteLength,
+        createdAt: this.dependencies.now(),
+        id,
+        mediaType: input.mediaType,
+        originalFileName: input.originalFileName,
+        parsing,
+        sha256: storedFile.sha256,
+        status: 'parsed',
+        storedFileName: storedFile.storedFileName,
+      };
+
       await this.dependencies.uploadRepository.save(upload);
       return upload;
     } catch (error: unknown) {

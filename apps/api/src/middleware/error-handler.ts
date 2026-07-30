@@ -1,4 +1,5 @@
 import { UploadNotFoundError, UploadValidationError } from '@security-log-analyzer/application';
+import { TextLogParseError } from '@security-log-analyzer/domain';
 import type { ErrorRequestHandler } from 'express';
 import { MulterError } from 'multer';
 
@@ -18,6 +19,11 @@ export const errorHandler: ErrorRequestHandler = (error: unknown, _request, resp
 
   if (error instanceof UploadValidationError) {
     response.status(400).json(errorResponse('INVALID_UPLOAD', error.message));
+    return;
+  }
+
+  if (error instanceof TextLogParseError) {
+    response.status(422).json(errorResponse('INVALID_LOG_CONTENT', error.message));
     return;
   }
 

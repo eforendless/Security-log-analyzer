@@ -1,0 +1,3 @@
+timestamp,level,provider,eventId,computer,userName,message
+2026-07-30T12:00:00Z,information,Security-Auditing,4624,workstation-01,analyst,Successful logon
+2026-07-30T12:05:00Z,warning,Security-Auditing,4625,workstation-01,analyst,Failed logon

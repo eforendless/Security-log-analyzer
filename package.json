@@ -21,7 +21,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint . --max-warnings=0",
-    "test": "npm run build:packages && npm run test --workspace @security-log-analyzer/api",
+    "test": "npm run build:packages && npm run test --workspace @security-log-analyzer/infrastructure && npm run test --workspace @security-log-analyzer/api",
     "typecheck": "npm run build:packages && npm run typecheck --workspaces --if-present"
   },
   "devDependencies": {
@@ -42,6 +42,7 @@
     "tsx": "^4.20.3",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.41.0",
+    "vitest": "^3.2.4",
     "vite": "^7.1.3"
   }
 }

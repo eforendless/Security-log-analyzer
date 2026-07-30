@@ -13,9 +13,12 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "@security-log-analyzer/domain": "file:../domain"
+    "@security-log-analyzer/domain": "file:../domain",
+    "csv-parse": "^5.6.0",
+    "fast-xml-parser": "^5.2.5"
   }
 }

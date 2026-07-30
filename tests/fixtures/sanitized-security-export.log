@@ -1,1 +1,3 @@
-2026-07-30T12:00:00Z Information Security-Auditing 4624 User logon succeeded
+2026-07-30T12:00:00Z Information Security-Auditing 4624 host=workstation-01 user=analyst Successful logon
+This record is intentionally malformed
+2026-07-30T12:05:00Z Warning Security-Auditing 4625 host=workstation-01 user=analyst Failed logon

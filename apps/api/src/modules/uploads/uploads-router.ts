@@ -8,6 +8,7 @@ import { isSupportedTextLogFile, uploadResponseSchema } from '@security-log-anal
 import {
   LocalUploadFileStorage,
   LocalUploadRepository,
+  SupportedTextLogParser,
 } from '@security-log-analyzer/infrastructure';
 import { Router } from 'express';
 import multer from 'multer';
@@ -21,11 +22,13 @@ export function createUploadsRouter(environment: Environment): Router {
   const router = Router();
   const fileStorage = new LocalUploadFileStorage(environment.uploadStorageDirectory);
   const uploadRepository = new LocalUploadRepository(environment.uploadStorageDirectory);
+  const parser = new SupportedTextLogParser();
   const createUpload = new CreateUpload({
     createUploadId: randomUUID,
     fileStorage,
     maximumUploadBytes: environment.maximumUploadBytes,
     now: () => new Date(),
+    parser,
     uploadRepository,
   });
   const getUploadStatus = new GetUploadStatus(uploadRepository);

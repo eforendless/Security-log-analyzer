@@ -63,7 +63,7 @@ export function UploadPage(): React.JSX.Element {
         <p className="text-xs font-semibold tracking-[0.14em] text-cyan-300">EVIDENCE INTAKE</p>
         <h1 className="mt-2 text-2xl font-semibold text-slate-100">Upload a text log export</h1>
         <p className="mt-2 text-sm leading-6 text-slate-400">
-          Files are stored privately and queued for the next processing stage.
+          Text exports are parsed and stored privately for the next analysis stage.
         </p>
       </div>
 
@@ -136,8 +136,54 @@ export function UploadPage(): React.JSX.Element {
               Refresh status
             </button>
           </div>
+          {upload.upload.parsingSummary !== undefined ? (
+            <div className="mt-5 grid gap-px border border-emerald-400/20 bg-emerald-400/20 sm:grid-cols-3">
+              <ParseMetric
+                label="Parsed events"
+                value={String(upload.upload.parsingSummary.eventCount)}
+              />
+              <ParseMetric
+                label="Skipped records"
+                value={String(upload.upload.parsingSummary.skippedRecordCount)}
+              />
+              <ParseMetric
+                label="Time range"
+                value={formatTimeRange(
+                  upload.upload.parsingSummary.earliestOccurredAt,
+                  upload.upload.parsingSummary.latestOccurredAt,
+                )}
+              />
+            </div>
+          ) : null}
         </section>
       ) : null}
     </section>
   );
+}
+
+interface ParseMetricProps {
+  readonly label: string;
+  readonly value: string;
+}
+
+function ParseMetric({ label, value }: ParseMetricProps): React.JSX.Element {
+  return (
+    <div className="min-w-0 bg-[#0c131d] px-4 py-3">
+      <p className="text-[10px] font-semibold tracking-[0.12em] text-slate-500">{label}</p>
+      <p className="mt-1 truncate text-sm font-medium text-slate-100" title={value}>
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function formatTimeRange(earliest: string | null, latest: string | null): string {
+  if (earliest === null || latest === null) {
+    return 'No valid timestamps';
+  }
+
+  const start = new Date(earliest).toISOString().replace('T', ' ').replace('.000Z', 'Z');
+  const end = new Date(latest).toISOString().replace('T', ' ').replace('.000Z', 'Z');
+
+  return start === end ? start : `${start} - ${end}`;
 }

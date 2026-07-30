@@ -13,6 +13,7 @@
   "dependencies": {
     "@security-log-analyzer/application": "file:../../packages/application",
     "@security-log-analyzer/contracts": "file:../../packages/contracts",
+    "@security-log-analyzer/domain": "file:../../packages/domain",
     "@security-log-analyzer/infrastructure": "file:../../packages/infrastructure",
     "dotenv": "^16.6.1",
     "express": "^5.1.0",

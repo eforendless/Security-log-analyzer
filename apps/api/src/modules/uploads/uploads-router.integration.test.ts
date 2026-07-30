@@ -1,4 +1,4 @@
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { apiErrorResponseSchema, uploadResponseSchema } from '@security-log-analyzer/contracts';
@@ -19,15 +19,23 @@ describe('upload routes', () => {
     const app = await createTestApp();
     const createResponse = await request(app)
       .post('/api/v1/uploads')
-      .attach('file', Buffer.from('Windows event export'), {
+      .attach('file', await readFixture('sanitized-security-export.log'), {
         contentType: 'text/plain',
         filename: 'security-export.log',
       })
       .expect(201);
     const createdUpload = uploadResponseSchema.parse(createResponse.body).upload;
 
-    expect(createdUpload.status).toBe('uploaded');
+    expect(createdUpload.status).toBe('parsed');
     expect(createdUpload.sha256).toHaveLength(64);
+    expect(createdUpload.parsingSummary).toEqual({
+      earliestOccurredAt: '2026-07-30T12:00:00.000Z',
+      eventCount: 2,
+      eventsById: { '4624': 1, '4625': 1 },
+      eventsByProvider: { 'Security-Auditing': 2 },
+      latestOccurredAt: '2026-07-30T12:05:00.000Z',
+      skippedRecordCount: 1,
+    });
 
     const statusResponse = await request(app)
       .get(`/api/v1/uploads/${createdUpload.id}`)
@@ -54,13 +62,46 @@ describe('upload routes', () => {
     const app = await createTestApp();
     const response = await request(app)
       .post('/api/v1/uploads')
-      .attach('file', Buffer.from('Windows Event Log export'), {
+      .attach('file', await readFixture('sanitized-security-export.log'), {
         contentType: 'application/octet-stream',
         filename: 'security-export.log',
       })
       .expect(201);
 
-    expect(uploadResponseSchema.parse(response.body).upload.status).toBe('uploaded');
+    expect(uploadResponseSchema.parse(response.body).upload.status).toBe('parsed');
+  });
+
+  it.each([
+    ['sanitized-security-export.csv', 'text/csv'],
+    ['sanitized-security-export.json', 'application/json'],
+    ['sanitized-security-export.xml', 'application/xml'],
+  ])('parses the %s text export', async (fixtureName, mediaType) => {
+    const app = await createTestApp();
+    const response = await request(app)
+      .post('/api/v1/uploads')
+      .attach('file', await readFixture(fixtureName), {
+        contentType: mediaType,
+        filename: fixtureName,
+      })
+      .expect(201);
+
+    const upload = uploadResponseSchema.parse(response.body).upload;
+    expect(upload.status).toBe('parsed');
+    expect(upload.parsingSummary?.eventCount).toBe(2);
+    expect(upload.parsingSummary?.skippedRecordCount).toBe(0);
+  });
+
+  it('returns a typed parsing error for invalid structured content', async () => {
+    const app = await createTestApp();
+    const response = await request(app)
+      .post('/api/v1/uploads')
+      .attach('file', Buffer.from('{invalid'), {
+        contentType: 'application/json',
+        filename: 'invalid.json',
+      })
+      .expect(422);
+
+    expect(apiErrorResponseSchema.parse(response.body).error.code).toBe('INVALID_LOG_CONTENT');
   });
 
   it('enforces the configured upload size limit', async () => {
@@ -87,4 +128,8 @@ async function createTestApp(maximumUploadBytes = 5 * 1024 * 1024) {
     port: 0,
     uploadStorageDirectory,
   });
+}
+
+function readFixture(fileName: string): Promise<Buffer> {
+  return readFile(new URL(`../../../../../tests/fixtures/${fileName}`, import.meta.url));
 }
