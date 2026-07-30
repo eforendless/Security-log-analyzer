@@ -44,6 +44,18 @@ describe('HTTP hardening', () => {
     expect(deniedResponse.body.error.code).toBe('CORS_ORIGIN_DENIED');
   });
 
+  it('allows same-origin browser asset requests without a cross-origin allowlist entry', async () => {
+    const app = await createTestApp();
+
+    const response = await request(app)
+      .get('/api/v1/health/live')
+      .set('Host', '127.0.0.1:4000')
+      .set('Origin', 'http://127.0.0.1:4000')
+      .expect(200);
+
+    expect(response.headers['access-control-allow-origin']).toBe('http://127.0.0.1:4000');
+  });
+
   it('rate limits application routes while allowing repeated health probes', async () => {
     const app = await createTestApp(1);
 

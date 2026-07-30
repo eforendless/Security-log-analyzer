@@ -13,7 +13,7 @@ export function createCorsMiddleware(allowedOrigins: readonly string[]): Request
       return;
     }
 
-    if (!configuredOrigins.has(origin)) {
+    if (!configuredOrigins.has(origin) && !isSameOriginRequest(request, origin)) {
       response.status(403).json({
         error: {
           code: 'CORS_ORIGIN_DENIED',
@@ -93,4 +93,19 @@ function isUuid(value: string | undefined): value is string {
     value !== undefined &&
     /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu.test(value)
   );
+}
+
+function isSameOriginRequest(request: Parameters<RequestHandler>[0], origin: string): boolean {
+  const host = request.get('host');
+
+  if (host === undefined) {
+    return false;
+  }
+
+  try {
+    const parsedOrigin = new URL(origin);
+    return parsedOrigin.host === host && parsedOrigin.protocol === `${request.protocol}:`;
+  } catch {
+    return false;
+  }
 }
